@@ -106,7 +106,7 @@ class MyPlot:
             plt.plot(
                 data[x_parameter],
                 m * data[x_parameter] + b,
-                label=f"y = {m:.2f}x + {b:.2f}",
+                label=f"{y_parameter} = {m:.2f}{x_parameter} + {b:.2f}",
             )
 
             # legend in the top right corner
