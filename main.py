@@ -8,6 +8,7 @@ from typing import List
 class MyPlot:
     def __init__(self):
         self.ils_names: List = []
+        self.correlation_coefficient: List = []
 
     def filter_data(self, data, il_name):
         filtered_data = pd.DataFrame(data[il_name])
@@ -31,6 +32,8 @@ class MyPlot:
         maping_dict: dict = None,
         font_size: int = 18,
         axis_font_size: int = 18,
+        y_axis_lim: tuple = None,
+        x_axis_lim: tuple = None,
     ):
         self.ils_names = list(data.keys())
 
@@ -40,6 +43,8 @@ class MyPlot:
         # fig size
         plt.figure(figsize=(12, 8))
         for case in list_unique:
+            # font size
+            plt.rcParams.update({"font.size": font_size})
             # separate data by parameter
             data = filtered_data[filtered_data[grouop_by_parameter] == case]
             plt.plot(
@@ -53,8 +58,11 @@ class MyPlot:
             plt.legend(loc="upper right")
             plt.xlabel(x_axis_label)
             plt.ylabel(y_axis_label)
-            # font size
-            plt.rcParams.update({"font.size": font_size})
+
+            # y axis limit
+            if y_axis_lim:
+                plt.ylim(y_axis_lim)
+
             # axis font size
             plt.tick_params(axis="both", which="major", labelsize=axis_font_size)
             if y_axis_log_scale:
@@ -82,31 +90,60 @@ class MyPlot:
         maping_dict: dict = None,
         font_size: int = 18,
         axis_font_size: int = 18,
+        temps_used_fit: list = None,
+        y_axis_lim: tuple = None,
+        x_axis_lim: tuple = None,
     ):
         self.ils_names = list(data.keys())
 
         filtered_data = self.filter_data(data, il_name)
-        list_unique = self.group_data(filtered_data, grouop_by_parameter)
+        if not temps_used_fit:
+            list_unique = self.group_data(filtered_data, grouop_by_parameter)
+        list_unique = temps_used_fit
 
         # fig size
         plt.figure(figsize=(12, 8))
         for case in list_unique:
+            # font size
+            plt.rcParams.update({"font.size": font_size})
             # separate data by parameter
             data = filtered_data[filtered_data[grouop_by_parameter] == case]
-            plt.plot(
+            plt.scatter(
                 data[x_parameter],
                 data[y_parameter],
-                label=f"{grouop_by_parameter} = {case} {legend_units}",
+                # label=f"{group_by_parameter} = {case} {legend_units}",
                 marker="o",
-                linestyle="--",
             )
 
-            # fit a line to the data
-            m, b = np.polyfit(data[x_parameter], data[y_parameter], 1)
+            # fit a line to the data and show the fit equation and R^2 in the legend and use the same color as the data
+            z = np.polyfit(data[x_parameter], data[y_parameter], 1)
+            p = np.poly1d(z)
+
+            # save the z and p and r2 in the self.correlation_coefficient
+            if grouop_by_parameter == "T":
+                my_lable = "Temperature (F)"
+            elif grouop_by_parameter == "P":
+                my_lable = "Pressure (psi)"
+            else:
+                my_lable = "my_lable"
+
+            self.correlation_coefficient.append(
+                {
+                    "Ionic Liquid": maping_dict[il_name],
+                    my_lable: round(case, 2),
+                    # "z": z,
+                    "Slope": round(p[1], 3),
+                    "Intercept": round(p[0], 3),
+                    "r2": round(np.corrcoef(data[x_parameter], data[y_parameter])[0, 1] ** 2, 2),
+                }
+            )
+
             plt.plot(
                 data[x_parameter],
-                m * data[x_parameter] + b,
-                label=f"{y_parameter} = {m:.2f}{x_parameter} + {b:.2f}",
+                p(data[x_parameter]),
+                linestyle="--",
+                # color="black",
+                label=f"{grouop_by_parameter}={case}{legend_units}\nSS={p[1]:.2f}*SR+{p[0]:.2f}, R2={np.corrcoef(data[x_parameter], data[y_parameter])[0,1]**2:.2f}",
             )
 
             # legend in the top right corner
@@ -126,4 +163,10 @@ class MyPlot:
 
             # change the figure background color
             plt.gca().set_facecolor("w")
+
+            if y_axis_lim:
+                plt.ylim(y_axis_lim)
+            if x_axis_lim:
+                plt.xlim(x_axis_lim)
+
         plt.show()
