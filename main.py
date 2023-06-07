@@ -203,12 +203,6 @@ class MyPlot:
             plt.rcParams.update({"font.size": font_size})
             # separate data by parameter
             data = filtered_data[filtered_data[grouop_by_parameter] == case]
-            # plt.scatter(
-            #     data[x_parameter],
-            #     data[y_parameter],
-            #     # label=f"{group_by_parameter} = {case} {legend_units}",
-            #     marker="o",
-            # )
 
             # fit a power law to the data
             # Generate some example data
@@ -235,7 +229,6 @@ class MyPlot:
             # Calculate the R-squared value
             R_squared = 1 - (RSS / TSS)
 
-
             # save the z and p and r2 in the self.correlation_coefficient
             if grouop_by_parameter == "T":
                 my_lable = "Temperature (F)"
@@ -254,38 +247,69 @@ class MyPlot:
                 }
             )
 
-            # plt.plot(
-            #     data[x_parameter],
-            #     np.exp(p(np.log(data[x_parameter]))),
-            #     linestyle="--",
-            #     # color="black",
-            #     label=f"{grouop_by_parameter}={case}{legend_units}\nSS={np.exp(p[1]):.2f}*SR^{p[0]:.2f}, R2={np.corrcoef(np.log(data[x_parameter]), np.log(data[y_parameter]))[0,1]**2:.2f}",
-            # )
-
-            # legend in the top right corner
-            # plt.legend(loc="upper right")
-            # plt.xlabel(x_axis_label)
-            # plt.ylabel(y_axis_label)
-            # # font size
-            # plt.rcParams.update({"font.size": font_size})
-            # # axis font size
-            # plt.tick_params(axis="both", which="major", labelsize=axis_font_size)
-            # if y_axis_log_scale:
-            #     # y axis log scale
-            #     plt.yscale("log")
-            # plt.title(maping_dict[il_name])
-            # # make small grid
-            # plt.grid(True, which="both", ls="--", color="0.65")
-            #
-            # # change the figure background color
-            # plt.gca().set_facecolor("w")
-            #
-            # if y_axis_lim:
-            #     plt.ylim(y_axis_lim)
-            # if x_axis_lim:
-            #     plt.xlim(x_axis_lim)
-
         plt.show()
 
     def power_law(self, x, k, n):
         return k * np.power(x, n)
+
+    def plot_data_4(
+            self,
+            data,
+            il_name: List[str] = None,
+            grouop_by_parameter: str = "T",
+            x_parameter: str = "SR",
+            y_parameter: str = "SS",
+            z_parameter: str = "cP",
+            y_axis_log_scale: bool = False,
+            legend_units: str = "F",
+            x_axis_label: str = "SR",
+            y_axis_label: str = "SS",
+            z_axis_label: str = "cP",
+            maping_dict: dict = None,
+            font_size: int = 18,
+            axis_font_size: int = 18,
+            y_axis_lim: tuple = None,
+            x_axis_lim: tuple = None,
+            z_axis_lim: tuple = None
+    ):
+        self.ils_names = list(data.keys())
+
+        filtered_data = self.filter_data(data, il_name)
+        list_unique = self.group_data(filtered_data, grouop_by_parameter)
+
+        # fig size
+        plt.figure(figsize=(12, 8))
+        for case in list_unique:
+            # font size
+            plt.rcParams.update({"font.size": font_size})
+            # separate data by parameter
+            data = filtered_data[filtered_data[grouop_by_parameter] == case]
+            plt.plot(
+                data[x_parameter],
+                data[y_parameter],
+                label=f"{grouop_by_parameter} = {case} {legend_units}",
+                marker="o",
+                linestyle="--",
+            )
+            # legend in the top right corner
+            plt.legend(loc="upper right")
+            plt.xlabel(x_axis_label)
+            plt.ylabel(y_axis_label)
+
+            # y axis limit
+            if y_axis_lim:
+                plt.ylim(y_axis_lim)
+
+            # axis font size
+            plt.tick_params(axis="both", which="major", labelsize=axis_font_size)
+            if y_axis_log_scale:
+                # y axis log scale
+                plt.yscale("log")
+            plt.title(maping_dict[il_name])
+            # make small grid
+            plt.grid(True, which="both", ls="--", color="0.65")
+
+            # change the figure background color
+            plt.gca().set_facecolor("w")
+        plt.show()
+
